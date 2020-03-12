@@ -23,6 +23,31 @@ function alg_cache(alg::MidpointSplitting,u,rate_prototype,uEltypeNoUnits,
   MidpointSplittingConstantCache()
 end
 
+@cache struct MMPTMCache{uType,rateType,WType} <: OrdinaryDiffEqMutableCache
+  u::uType
+  uprev::uType
+  uprev2::uType
+  tmp::uType
+  fsalfirst::rateType
+  W::WType
+  k::rateType
+end
+
+function alg_cache(alg::MMPTM,u,rate_prototype,uEltypeNoUnits,
+                   tTypeNoUnits,uprev,uprev2,f,t,dt,reltol,p,calck,::Val{true})
+  W = false .* vec(rate_prototype) .* vec(rate_prototype)' # uEltype?
+  k = zero(rate_prototype); fsalfirst = zero(rate_prototype)
+  MMPTMCache(u,uprev,uprev2,similar(u),fsalfirst,W,k)
+end
+
+struct MMPTMConstantCache <: OrdinaryDiffEqConstantCache
+end
+
+function alg_cache(alg::MMPTM,u,rate_prototype,uEltypeNoUnits,
+                   tTypeNoUnits,uprev,uprev2,f,t,dt,reltol,p,calck,::Val{false})
+  MMPTMConstantCache()
+end
+
 struct LinearExponentialConstantCache <: OrdinaryDiffEqConstantCache end
 
 alg_cache(alg::LinearExponential,u,rate_prototype,uEltypeNoUnits,uBottomEltypeNoUnits,

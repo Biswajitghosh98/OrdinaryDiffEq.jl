@@ -37,6 +37,45 @@ function perform_step!(integrator, cache::MidpointSplittingCache, repeat_step=fa
   integrator.destats.nf += 1
 end
 
+function initialize!(integrator, cache::MMPTMCache)
+  integrator.kshortsize = 2
+  integrator.fsalfirst = cache.fsalfirst
+  integrator.fsallast = cache.k
+  resize!(integrator.k, integrator.kshortsize)
+  integrator.k[1] = integrator.fsalfirst
+  integrator.k[2] = integrator.fsallast
+  integrator.f(integrator.fsalfirst, integrator.uprev, integrator.p, integrator.t) # For the interpolation, needs k at the updated point
+  integrator.destats.nf += 1
+end
+
+function perform_step!(integrator, cache::MMPTMCache, repeat_step=false)
+  @unpack t,dt,uprev,u = integrator
+  @unpack W,k,tmp = cache
+  mass_matrix = integrator.f.mass_matrix
+
+  L = integrator.f
+  update_coefficients!(L,u,p,t+dt/2)
+
+  A = L.As[1]
+  # Bs = L.As[2:end]
+
+  # copyto!(tmp, uprev)
+  # for B in reverse(Bs)
+  #   u .= exp((dt/2)*B)*tmp
+  #   @swap!(tmp,u)
+  # end
+
+  u .= exp(dt*A)*tmp
+
+  # for B in Bs
+  #   tmp .= exp((dt/2)*B)*u
+  #   @swap!(u,tmp)
+  # end
+
+  f(integrator.fsallast,u,p,t+dt)
+  integrator.destats.nf += 1
+end
+
 function initialize!(integrator, cache::LinearExponentialConstantCache)
   # Pre-start fsal
   integrator.fsalfirst = integrator.f(integrator.uprev, integrator.p, integrator.t)

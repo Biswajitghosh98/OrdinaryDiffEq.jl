@@ -646,6 +646,8 @@ IRKC(;chunk_size=0,autodiff=true,diff_type=Val{:forward},
 
 struct MidpointSplitting <: OrdinaryDiffEqAlgorithm end
 
+struct MMPTM <: OrdinaryDiffEqAlgorithm end
+
 struct LinearExponential <: OrdinaryDiffEqExponentialAlgorithm
   krylov::Symbol
   m::Int
